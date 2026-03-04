@@ -33,8 +33,14 @@ class XpProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Track if a level-up just happened so UI can show celebration
+  bool _didLevelUp = false;
+  bool get didLevelUp => _didLevelUp;
+  void clearLevelUp() => _didLevelUp = false;
+
   /// Add XP, handling multi-level-ups in a loop.
   void addXp(int amount) {
+    final oldLevel = _level;
     _totalXp += amount;
     _xpInCurrentLevel += amount;
 
@@ -44,6 +50,7 @@ class XpProvider extends ChangeNotifier {
       _level++;
     }
 
+    _didLevelUp = _level > oldLevel;
     _save();
     notifyListeners();
   }

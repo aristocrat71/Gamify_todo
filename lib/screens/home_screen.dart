@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
 import '../providers/xp_provider.dart';
 import '../providers/achievement_provider.dart';
 import '../utils/xp_calculator.dart';
+import '../utils/constants.dart';
 import '../theme/app_theme.dart';
 import '../widgets/xp_bar.dart';
 import '../widgets/level_badge.dart';
@@ -32,21 +34,37 @@ class _HomeScreenState extends State<HomeScreen> {
     final task = await taskProvider.toggleComplete(taskId);
 
     if (task.isCompleted) {
+      HapticFeedback.mediumImpact();
+
       final multiplier = getStreakMultiplier(xpProvider.currentStreak);
       final reward = (calculateReward(task.difficulty) * multiplier).round();
       xpProvider.addXp(reward);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('+$reward XP!'),
-            duration: const Duration(seconds: 1),
-            backgroundColor: AppTheme.successGreen.withValues(alpha: 0.9),
-          ),
-        );
+      if (!mounted) return;
+
+      // Show level-up dialog if leveled up
+      if (xpProvider.didLevelUp) {
+        xpProvider.clearLevelUp();
+        _showLevelUpDialog(xpProvider.level);
       }
+
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.bolt, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Text('+$reward XP!', style: const TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          duration: const Duration(milliseconds: 1200),
+          backgroundColor: AppTheme.successGreen.withValues(alpha: 0.9),
+        ),
+      );
     } else {
-      // Unchecking — reverse the reward that was given, not the miss penalty
+      HapticFeedback.lightImpact();
+
       final multiplier = getStreakMultiplier(xpProvider.currentStreak);
       final reward = (calculateReward(task.difficulty) * multiplier).round();
       xpProvider.removeXp(reward);
@@ -62,17 +80,120 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (mounted && newAchievements.isNotEmpty) {
       for (final id in newAchievements) {
+        final def = achievementDefs.where((a) => a.id == id).firstOrNull;
+        if (def == null) continue;
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Achievement unlocked: $id'),
-            backgroundColor: AppTheme.levelPurple.withValues(alpha: 0.9),
+            content: Row(
+              children: [
+                Icon(def.icon, color: AppTheme.xpAmber, size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Achievement Unlocked!',
+                          style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                      Text(def.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            duration: const Duration(seconds: 3),
+            backgroundColor: AppTheme.levelPurple.withValues(alpha: 0.95),
           ),
         );
       }
     }
   }
 
+  void _showLevelUpDialog(int newLevel) {
+    HapticFeedback.heavyImpact();
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: AppTheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.elasticOut,
+                builder: (context, value, child) {
+                  return Transform.scale(scale: value, child: child);
+                },
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [AppTheme.xpAmber, AppTheme.streakOrange],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.xpAmber.withValues(alpha: 0.5),
+                        blurRadius: 24,
+                        spreadRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$newLevel',
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'LEVEL UP!',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.xpAmber,
+                  letterSpacing: 2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'You reached level $newLevel',
+                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.xpAmber,
+                    foregroundColor: const Color(0xFF121220),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Awesome!', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _onTaskDismissed(int taskId) {
+    HapticFeedback.lightImpact();
     context.read<TaskProvider>().deleteTask(taskId);
   }
 
