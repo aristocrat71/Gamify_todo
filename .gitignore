@@ -12,6 +12,7 @@
 .swiftpm/
 migrate_working_dir/
 CLAUDE.md
+DEV_PLAN.md
 .claude
 
 # IntelliJ related
@@ -29,11 +30,13 @@ CLAUDE.md
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
 /build/
 /coverage/
+**/GeneratedPluginRegistrant.*
 
 # Symbolication related
 app.*.symbols
