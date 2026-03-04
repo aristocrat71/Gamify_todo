@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../services/database_service.dart';
 import '../services/prefs_service.dart';
+import '../utils/constants.dart';
 
 class AchievementProvider extends ChangeNotifier {
   final DatabaseService _db;
@@ -28,7 +29,10 @@ class AchievementProvider extends ChangeNotifier {
     final totalCompleted = await _db.getTotalCompletedTasks();
     final hardCompleted = await _db.getCompletedHardTasks();
 
+    final validIds = achievementDefs.map((a) => a.id).toSet();
+
     void check(String id, bool condition) {
+      assert(validIds.contains(id), 'Unknown achievement ID: $id');
       if (!_unlocked.contains(id) && condition) {
         _unlocked.add(id);
         newlyUnlocked.add(id);

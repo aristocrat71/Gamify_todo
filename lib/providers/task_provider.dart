@@ -18,10 +18,15 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  static const validDifficulties = ['easy', 'medium', 'hard'];
+
   Future<Task> addTask({
     required String title,
     required String difficulty,
   }) async {
+    if (!validDifficulties.contains(difficulty)) {
+      throw ArgumentError('Invalid difficulty: $difficulty');
+    }
     final task = Task(
       title: title,
       difficulty: difficulty,

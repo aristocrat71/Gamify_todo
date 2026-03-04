@@ -34,7 +34,11 @@ class PrefsService {
 
   String? get lastActiveDate => _prefs.getString('last_active_date');
   set lastActiveDate(String? v) {
-    if (v != null) _prefs.setString('last_active_date', v);
+    if (v != null) {
+      _prefs.setString('last_active_date', v);
+    } else {
+      _prefs.remove('last_active_date');
+    }
   }
 
   // --- Achievements ---

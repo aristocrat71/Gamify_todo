@@ -26,10 +26,14 @@ class SettingsScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () async {
-              await DatabaseService.instance.deleteAllData();
+              // Clear prefs first (losing prefs with data intact is recoverable;
+              // losing data with stale prefs is not)
               await PrefsService.instance.clearAll();
+              await DatabaseService.instance.deleteAllData();
               await PrefsService.instance.init();
 
+              // Always reload providers to avoid stale in-memory state,
+              // regardless of widget mount status
               if (context.mounted) {
                 context.read<XpProvider>().loadFromPrefs();
                 context.read<AchievementProvider>().loadFromPrefs();

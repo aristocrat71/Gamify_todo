@@ -15,6 +15,7 @@ class AddTaskScreen extends StatefulWidget {
 class _AddTaskScreenState extends State<AddTaskScreen> {
   final _titleController = TextEditingController();
   String _difficulty = 'medium';
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -24,7 +25,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
   void _save() async {
     final title = _titleController.text.trim();
-    if (title.isEmpty) return;
+    if (title.isEmpty || _saving) return;
+
+    setState(() => _saving = true);
 
     await context.read<TaskProvider>().addTask(
       title: title,

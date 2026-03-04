@@ -65,9 +65,8 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       HapticFeedback.lightImpact();
 
-      final multiplier = getStreakMultiplier(xpProvider.currentStreak);
-      final reward = (calculateReward(task.difficulty) * multiplier).round();
-      xpProvider.removeXp(reward);
+      final penalty = calculatePenalty(task.difficulty);
+      xpProvider.removeXp(penalty);
     }
 
     // Check achievements

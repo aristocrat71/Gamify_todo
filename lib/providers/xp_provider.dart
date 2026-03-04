@@ -40,6 +40,7 @@ class XpProvider extends ChangeNotifier {
 
   /// Add XP, handling multi-level-ups in a loop.
   void addXp(int amount) {
+    assert(amount >= 0, 'XP amount must be non-negative');
     final oldLevel = _level;
     _totalXp += amount;
     _xpInCurrentLevel += amount;
@@ -57,6 +58,7 @@ class XpProvider extends ChangeNotifier {
 
   /// Remove XP. Clamps xpInCurrentLevel to 0 — no de-leveling.
   void removeXp(int amount) {
+    assert(amount >= 0, 'XP amount must be non-negative');
     _totalXp = (_totalXp - amount).clamp(0, _totalXp);
     _xpInCurrentLevel = (_xpInCurrentLevel - amount).clamp(0, _xpInCurrentLevel);
 
@@ -114,14 +116,6 @@ class XpProvider extends ChangeNotifier {
     if (xpEarned > 0) addXp(xpEarned);
     if (xpLost > 0) removeXp(xpLost);
 
-    // Update streak
-    if (incomplete.isEmpty) {
-      _currentStreak++;
-      if (_currentStreak > _bestStreak) _bestStreak = _currentStreak;
-    } else {
-      _currentStreak = 0;
-    }
-
     // Write day log
     await _db.insertDayLog(DayLog(
       date: lastDate,
@@ -131,9 +125,14 @@ class XpProvider extends ChangeNotifier {
       xpLost: xpLost,
     ));
 
-    // Multi-day gap resets streak
+    // Update streak — check multi-day gap BEFORE streak increment
     final daysSince = _daysBetween(lastDate, today);
     if (daysSince > 1) {
+      _currentStreak = 0;
+    } else if (incomplete.isEmpty) {
+      _currentStreak++;
+      if (_currentStreak > _bestStreak) _bestStreak = _currentStreak;
+    } else {
       _currentStreak = 0;
     }
 
