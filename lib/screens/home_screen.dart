@@ -46,8 +46,10 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } else {
-      final penalty = calculatePenalty(task.difficulty);
-      xpProvider.removeXp(penalty);
+      // Unchecking — reverse the reward that was given, not the miss penalty
+      final multiplier = getStreakMultiplier(xpProvider.currentStreak);
+      final reward = (calculateReward(task.difficulty) * multiplier).round();
+      xpProvider.removeXp(reward);
     }
 
     // Check achievements

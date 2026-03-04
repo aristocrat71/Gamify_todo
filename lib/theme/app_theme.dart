@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   AppTheme._();
@@ -31,48 +32,56 @@ class AppTheme {
   }
 
   // --- Theme data ---
-  static ThemeData darkTheme = ThemeData(
-    brightness: Brightness.dark,
-    scaffoldBackgroundColor: const Color(0xFF121220),
-    colorScheme: const ColorScheme.dark(
-      primary: xpAmber,
-      secondary: levelPurple,
-      surface: surface,
-      error: penaltyRed,
-    ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: surface,
-      elevation: 0,
-      centerTitle: true,
-      titleTextStyle: TextStyle(
-        color: textPrimary,
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
+  static ThemeData get darkTheme {
+    final baseTextTheme = GoogleFonts.pressStart2pTextTheme(
+      ThemeData.dark().textTheme,
+    );
+
+    return ThemeData(
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF121220),
+      textTheme: baseTextTheme,
+      colorScheme: const ColorScheme.dark(
+        primary: xpAmber,
+        secondary: levelPurple,
+        surface: surface,
+        error: penaltyRed,
       ),
-    ),
-    cardTheme: CardThemeData(
-      color: surfaceLight,
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-    ),
-    floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: xpAmber,
-      foregroundColor: Color(0xFF121220),
-    ),
-    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: surface,
-      selectedItemColor: xpAmber,
-      unselectedItemColor: textSecondary,
-    ),
-    chipTheme: ChipThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-    ),
-    snackBarTheme: SnackBarThemeData(
-      backgroundColor: surfaceLight,
-      contentTextStyle: const TextStyle(color: textPrimary),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      behavior: SnackBarBehavior.floating,
-    ),
-  );
+      appBarTheme: AppBarTheme(
+        backgroundColor: surface,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: GoogleFonts.pressStart2p(
+          color: textPrimary,
+          fontSize: 14,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: surfaceLight,
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: xpAmber,
+        foregroundColor: Color(0xFF121220),
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: surface,
+        selectedItemColor: xpAmber,
+        unselectedItemColor: textSecondary,
+        selectedLabelStyle: GoogleFonts.pressStart2p(fontSize: 7),
+        unselectedLabelStyle: GoogleFonts.pressStart2p(fontSize: 7),
+      ),
+      chipTheme: ChipThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: surfaceLight,
+        contentTextStyle: GoogleFonts.pressStart2p(color: textPrimary, fontSize: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 }

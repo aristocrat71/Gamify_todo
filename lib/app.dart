@@ -14,6 +14,7 @@ class GamifyTodoApp extends StatelessWidget {
     return MaterialApp(
       title: 'Gamify Todo',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const _NoStretchScrollBehavior(),
       theme: AppTheme.darkTheme,
       initialRoute: '/',
       routes: {
@@ -23,6 +24,19 @@ class GamifyTodoApp extends StatelessWidget {
         '/achievements': (_) => const AchievementsScreen(),
         '/settings': (_) => const SettingsScreen(),
       },
+    );
+  }
+}
+
+class _NoStretchScrollBehavior extends ScrollBehavior {
+  const _NoStretchScrollBehavior();
+
+  @override
+  Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) {
+    return GlowingOverscrollIndicator(
+      axisDirection: details.direction,
+      color: Theme.of(context).colorScheme.primary,
+      child: child,
     );
   }
 }
