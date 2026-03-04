@@ -57,6 +57,23 @@ class TaskProvider extends ChangeNotifier {
     return updated;
   }
 
+  Future<void> updateTask({
+    required int taskId,
+    required String title,
+    required String difficulty,
+  }) async {
+    if (!validDifficulties.contains(difficulty)) {
+      throw ArgumentError('Invalid difficulty: $difficulty');
+    }
+    final index = _tasks.indexWhere((t) => t.id == taskId);
+    if (index == -1) throw Exception('Task not found');
+
+    final updated = _tasks[index].copyWith(title: title, difficulty: difficulty);
+    await _db.updateTask(updated);
+    _tasks[index] = updated;
+    notifyListeners();
+  }
+
   Future<void> deleteTask(int taskId) async {
     await _db.deleteTask(taskId);
     _tasks.removeWhere((t) => t.id == taskId);

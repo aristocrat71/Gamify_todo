@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../models/task.dart';
 import '../providers/task_provider.dart';
 import '../providers/xp_provider.dart';
 import '../providers/achievement_provider.dart';
@@ -65,8 +66,10 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       HapticFeedback.lightImpact();
 
-      final penalty = calculatePenalty(task.difficulty);
-      xpProvider.removeXp(penalty);
+      // Unchecking reverses the reward, not the miss penalty
+      final multiplier = getStreakMultiplier(xpProvider.currentStreak);
+      final reward = (calculateReward(task.difficulty) * multiplier).round();
+      xpProvider.removeXp(reward);
     }
 
     // Check achievements
@@ -196,6 +199,106 @@ class _HomeScreenState extends State<HomeScreen> {
     context.read<TaskProvider>().deleteTask(taskId);
   }
 
+  void _onTaskDelete(Task task) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text('Delete Task'),
+        content: Text('Delete "${task.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              HapticFeedback.lightImpact();
+              context.read<TaskProvider>().deleteTask(task.id!);
+            },
+            child: const Text('Delete', style: TextStyle(color: AppTheme.penaltyRed)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onTaskEdit(Task task) {
+    final titleController = TextEditingController(text: task.title);
+    String difficulty = task.difficulty;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: AppTheme.surface,
+          title: const Text('Edit Task'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                maxLength: 100,
+                decoration: InputDecoration(
+                  hintText: 'Task title',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppTheme.surfaceLight),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppTheme.xpAmber),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                children: ['easy', 'medium', 'hard'].map((d) {
+                  final isSelected = difficulty == d;
+                  final color = AppTheme.difficultyColor(d);
+                  return ChoiceChip(
+                    label: Text(d[0].toUpperCase() + d.substring(1)),
+                    selected: isSelected,
+                    selectedColor: color.withValues(alpha: 0.3),
+                    labelStyle: TextStyle(
+                      color: isSelected ? color : AppTheme.textSecondary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                    side: BorderSide(color: isSelected ? color : AppTheme.surfaceLight),
+                    onSelected: (_) => setDialogState(() => difficulty = d),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final title = titleController.text.trim();
+                if (title.isEmpty) return;
+                Navigator.pop(ctx);
+                context.read<TaskProvider>().updateTask(
+                  taskId: task.id!,
+                  title: title,
+                  difficulty: difficulty,
+                );
+              },
+              child: const Text('Save', style: TextStyle(color: AppTheme.xpAmber)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -298,6 +401,8 @@ class _HomeScreenState extends State<HomeScreen> {
               task: task,
               onToggle: () => _onTaskToggle(task.id!),
               onDismissed: () => _onTaskDismissed(task.id!),
+              onEdit: () => _onTaskEdit(task),
+              onDelete: () => _onTaskDelete(task),
             );
           },
         );
